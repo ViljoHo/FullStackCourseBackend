@@ -112,6 +112,6 @@ const PORT = process.env.PORT || 3001
 const test = process.env.TEST
 console.log(test)
 console.log(PORT)
-app.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`)
+app.listen(test, () => {
+    console.log(`Server running on port ${test}`)
 })
