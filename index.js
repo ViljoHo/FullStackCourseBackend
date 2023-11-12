@@ -1,3 +1,5 @@
+require('dotenv').config()
+
 const express = require('express')
 const morgan = require('morgan')
 const cors = require('cors')
@@ -6,6 +8,9 @@ const app = express()
 app.use(express.json())
 app.use(cors())
 app.use(express.static('dist'))
+
+//Model
+const Person = require('./models/person')
 
 morgan.token('reqBodyContent', (req, res) => {
     console.log(req.body)
@@ -19,59 +24,65 @@ morgan.token('reqBodyContent', (req, res) => {
 
 app.use(morgan(':method :url :status :res[content-length] - :response-time ms :reqBodyContent'))
 
-const getRandomId = (max) => {
-    return Math.floor(Math.random() * max)
-}
+
+// const getRandomId = (max) => {
+//     return Math.floor(Math.random() * max)
+// }
 
 
-let persons = [
-    {
-        id: 1,
-        name: "Arto Hellas",
-        number: "040-123456"
-    },
-    {
-        id: 2,
-        name: "Ada Lovelace",
-        number: "39-44-5323523"
-    },
-    {
-        id: 3,
-        name: "Dan Abramov",
-        number: "12-43-234345"
-    },
-    {
-        id: 4,
-        name: "Mary Poppendick",
-        number: "39-23-6423122"
-    }
+// let persons = [
+//     {
+//         id: 1,
+//         name: "Arto Hellas",
+//         number: "040-123456"
+//     },
+//     {
+//         id: 2,
+//         name: "Ada Lovelace",
+//         number: "39-44-5323523"
+//     },
+//     {
+//         id: 3,
+//         name: "Dan Abramov",
+//         number: "12-43-234345"
+//     },
+//     {
+//         id: 4,
+//         name: "Mary Poppendick",
+//         number: "39-23-6423122"
+//     }
     
-]
+// ]
 
 app.get('/', (req, res) => {
-    res.send("hello worldff\nmorooo")
+    res.send("hello world")
 })
 
 app.get('/api/persons', (req, res) => {
-    res.json(persons)
+    Person.find({}).then(persons => {
+        res.json(persons)
+    })
 })
 
-app.get('/api/persons/:id', (req, res) => {
-    const id = Number(req.params.id)
-    const person = persons.find(person => person.id === id)
-
-    if (person) {
-        res.json(person)
-    } else {
-        res.status(404).end()
-    }
+app.get('/api/persons/:id', (req, res, next) => {
+    Person.findById(req.params.id).then(person => {
+        if (person) {
+            res.json(person)
+        } else {
+            res.status(404).end()
+        }
+    })
+    .catch(error => next(error))
 })
 
-app.delete('/api/persons/:id', (req, res) => {
-    const id = Number(req.params.id)
-    persons = persons.filter(person => person.id !== id)
+app.delete('/api/persons/:id', (req, res, next) => {
 
-    res.status(204).end()
+    Person.findByIdAndDelete(req.params.id)
+        .then(result => {
+            res.status(204).end()
+        })
+        .catch(error => next(error))
+
 })
 
 app.post('/api/persons', (req, res) => {
@@ -92,23 +103,55 @@ app.post('/api/persons', (req, res) => {
         })
     }
 
-    const newPersonObj = {
+    const person = new Person({
         name: newName,
         number: newNumber,
-        id: getRandomId(100000),
+    })
+
+    person.save().then(savedPerson => {
+        res.json(savedPerson)
+    })
+
+})
+
+app.put('/api/persons/:id', (req, res, next) => {
+    const body = req.body
+
+    console.log(body)
+
+    const person = {
+        name: body.name,
+        number: body.number,
     }
 
-    persons = persons.concat(newPersonObj)
-
-    res.json(newPersonObj)
+    Person.findByIdAndUpdate(req.params.id, person, { new: true })
+        .then(updatedPerson => {
+            res.json(updatedPerson)
+        })
+        .catch(error => next(error))
 
 })
 
 app.get('/info', (req, res) => {
-    res.send(`Phonebook has info for ${persons.length} people <br/> ${new Date()}`)
+    Person.find({}).then(people => {
+        res.send(`Phonebook has info for ${people.length} people <br/> ${new Date()}`)
+    })
 })
 
-const PORT = process.env.PORT || 3001
+const errorHandler = (error, req, res, next) => {
+    console.log(error.message)
+
+    if (error.name === 'CastError') {
+        return res.status(400).send({ error: 'malformatted id' })
+    }
+
+    next(error)
+
+}
+
+app.use(errorHandler)
+
+const PORT = process.env.PORT
 
 
 app.listen(PORT, () => {
