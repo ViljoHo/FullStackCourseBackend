@@ -51,11 +51,11 @@ app.use(morgan(':method :url :status :res[content-length] - :response-time ms :r
 //         name: "Mary Poppendick",
 //         number: "39-23-6423122"
 //     }
-    
+
 // ]
 
 app.get('/', (req, res) => {
-    res.send("hello world")
+    res.send('hello world')
 })
 
 app.get('/api/persons', (req, res) => {
@@ -72,7 +72,7 @@ app.get('/api/persons/:id', (req, res, next) => {
             res.status(404).end()
         }
     })
-    .catch(error => next(error))
+        .catch(error => next(error))
 })
 
 app.delete('/api/persons/:id', (req, res, next) => {
@@ -110,13 +110,13 @@ app.post('/api/persons', async (req, res, next) => {
     //usefull tho, if called post method from somewhere else
     const nameExists = await hasName(newName)
 
-    if (newName === null || nameExists || newName === "") {
+    if (newName === null || nameExists || newName === '') {
         return res.status(400).json({
             error: 'there has to be name or it must be unique'
         })
     }
 
-    if (newNumber == null || newNumber === "") {
+    if (newNumber === null || newNumber === '') {
         return res.status(400).json({
             error: 'there has to be number'
         })
@@ -128,10 +128,10 @@ app.post('/api/persons', async (req, res, next) => {
     })
 
     person.save()
-    .then(savedPerson => {
-        res.json(savedPerson)
-    })
-    .catch(error => next(error))
+        .then(savedPerson => {
+            res.json(savedPerson)
+        })
+        .catch(error => next(error))
 
 })
 
@@ -165,7 +165,7 @@ const errorHandler = (error, req, res, next) => {
     if (error.name === 'CastError') {
         return res.status(400).send({ error: 'malformatted id' })
     } else if (error.name === 'ValidationError') {
-        return res.status(400).json({error: error.message})
+        return res.status(400).json({ error: error.message })
     }
 
     next(error)
