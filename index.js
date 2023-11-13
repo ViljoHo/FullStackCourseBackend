@@ -25,9 +25,9 @@ morgan.token('reqBodyContent', (req, res) => {
 app.use(morgan(':method :url :status :res[content-length] - :response-time ms :reqBodyContent'))
 
 
-// const getRandomId = (max) => {
-//     return Math.floor(Math.random() * max)
-// }
+const getRandomId = (max) => {
+    return Math.floor(Math.random() * max)
+}
 
 
 // let persons = [
@@ -85,13 +85,32 @@ app.delete('/api/persons/:id', (req, res, next) => {
 
 })
 
-app.post('/api/persons', (req, res) => {
+
+
+//own function which check is there already new name
+const hasName = (newName) => {
+    const nameExists = Person.find({ name: newName }).then(result => {
+        //result is empty if there is no name like newName
+        if (result.length > 0) {
+            return true
+        } else {
+            return false
+        }
+    })
+    return nameExists
+}
+
+app.post('/api/persons', async (req, res) => {
     const body = req.body
 
     const newName = body.name
     const newNumber = body.number
 
-    if (newName === null || persons.some(({name}) => name === newName) || newName === "") {
+    //never true with phonebook frontend, because there is that editing feature
+    //usefull tho, if called post method from somewhere else
+    const nameExists = await hasName(newName)
+
+    if (newName === null || nameExists || newName === "") {
         return res.status(400).json({
             error: 'there has to be name or it must be unique'
         })
