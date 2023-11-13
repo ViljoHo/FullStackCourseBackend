@@ -43,4 +43,4 @@ if (process.argv.length < 4) {
 
 }
 
-//3.12 tehty
+//3.20 tehty
